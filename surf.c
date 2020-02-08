@@ -35,7 +35,7 @@
 #define LENGTH(x)               (sizeof(x) / sizeof(x[0]))
 #define CLEANMASK(mask)         (mask & (MODKEY|GDK_SHIFT_MASK))
 
-enum { AtomFind, AtomGo, AtomUri, AtomLast };
+enum { AtomFind, AtomSearch, AtomGo, AtomUri, AtomLast };
 
 enum {
 	OnDoc   = WEBKIT_HIT_TEST_RESULT_CONTEXT_DOCUMENT,
@@ -82,6 +82,7 @@ typedef enum {
 	Style,
 	WebGL,
 	ZoomLevel,
+	ClipboardNotPrimary,
 	ParameterLast
 } ParamName;
 
@@ -232,6 +233,7 @@ static void togglecookiepolicy(Client *c, const Arg *a);
 static void toggleinspector(Client *c, const Arg *a);
 static void find(Client *c, const Arg *a);
 static void playexternal(Client *c, const Arg *a);
+static void search(Client *c, const Arg *a);
 
 /* Buttons */
 static void clicknavigate(Client *c, const Arg *a, WebKitHitTestResult *h);
@@ -292,6 +294,7 @@ static ParamName loadcommitted[] = {
 	SpellLanguages,
 	Style,
 	ZoomLevel,
+	ClipboardNotPrimary,
 	ParameterLast
 };
 
@@ -327,6 +330,7 @@ setup(void)
 
 	/* atoms */
 	atoms[AtomFind] = XInternAtom(dpy, "_SURF_FIND", False);
+	atoms[AtomSearch] = XInternAtom(dpy, "_SURF_SEARCH", False);
 	atoms[AtomGo] = XInternAtom(dpy, "_SURF_GO", False);
 	atoms[AtomUri] = XInternAtom(dpy, "_SURF_URI", False);
 
@@ -574,6 +578,19 @@ loaduri(Client *c, const Arg *a)
 		webkit_web_view_load_uri(c->view, url);
 		updatetitle(c);
 	}
+
+	g_free(url);
+}
+
+void
+search(Client *c, const Arg *a)
+{
+	Arg arg;
+	char *url;
+
+	url = g_strdup_printf(searchurl, a->v);
+	arg.v = url;
+	loaduri(c, &arg);
 
 	g_free(url);
 }
@@ -1312,6 +1329,9 @@ processx(GdkXEvent *e, GdkEvent *event, gpointer d)
 				find(c, NULL);
 
 				return GDK_FILTER_REMOVE;
+			} else if (ev->atom == atoms[AtomSearch]) {
+				a.v = getatom(c, AtomSearch);
+				search(c, &a);
 			} else if (ev->atom == atoms[AtomGo]) {
 				a.v = getatom(c, AtomGo);
 				loaduri(c, &a);
@@ -1817,13 +1837,18 @@ showcert(Client *c, const Arg *a)
 void
 clipboard(Client *c, const Arg *a)
 {
+	/* User defined choice of selection, see config.h */
+	GdkAtom	selection = GDK_SELECTION_PRIMARY;
+	if (curconfig[ClipboardNotPrimary].val.i > 0)
+		selection = GDK_SELECTION_CLIPBOARD;
+
 	if (a->i) { /* load clipboard uri */
 		gtk_clipboard_request_text(gtk_clipboard_get(
-		                           GDK_SELECTION_PRIMARY),
+                                          selection),
 		                           pasteuri, c);
 	} else { /* copy uri */
 		gtk_clipboard_set_text(gtk_clipboard_get(
-		                       GDK_SELECTION_PRIMARY), c->targeturi
+		                       selection), c->targeturi
 		                       ? c->targeturi : geturi(c), -1);
 	}
 }
@@ -2121,7 +2146,11 @@ main(int argc, char *argv[])
 	if (argc > 0)
 		arg.v = argv[0];
 	else
+#ifdef HOMEPAGE
+		arg.v = HOMEPAGE;
+#else
 		arg.v = "about:blank";
+#endif
 
 	setup();
 	c = newclient(NULL);

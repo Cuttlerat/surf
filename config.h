@@ -6,6 +6,7 @@ static char *styledir       = "~/.surf/styles/";
 static char *certdir        = "~/.surf/certificates/";
 static char *cachedir       = "~/.surf/cache/";
 static char *cookiefile     = "~/.surf/cookies.txt";
+static char *searchurl      = "duckduckgo.com/?q=%s";
 
 
 #define DMENUMON   "0"
@@ -15,6 +16,7 @@ static char *cookiefile     = "~/.surf/cookies.txt";
 #define COL_GRAY5  "#1d1d1d"
 #define COL_RED1   "#c40233"
 
+#define HOMEPAGE "https://duckduckgo.com/"
 
 /* Webkit default features */
 /* Highest priority value will be used.
@@ -56,7 +58,8 @@ static Parameter defconfig[ParameterLast] = {
 	[StrictTLS]           =       { { .i = 1 },     },
 	[Style]               =       { { .i = 1 },     },
 	[WebGL]               =       { { .i = 0 },     },
-	[ZoomLevel]           =       { { .f = 1.4 },   },
+	[ZoomLevel]           =       { { .f = 1.6 },   },
+	[ClipboardNotPrimary] =       { { .i = 1 },	    },
 };
 
 static UriParameters uriparams[] = {
@@ -105,6 +108,17 @@ static WebKitFindOptions findopts = WEBKIT_FIND_OPTIONS_CASE_INSENSITIVE |
 #define PLUMB(u) {\
         .v = (const char *[]){ "/bin/sh", "-c", \
              "xdg-open \"$0\"", u, NULL \
+        } \
+}
+
+
+#define SEARCH() { \
+        .v = (const char *[]){ "/bin/sh", "-c", \
+             "xprop -id $1 -f $2 8s -set $2 \"" \
+             "$(dmenu -fn \"" DMENUFONT "\" -nb \"" COL_GRAY1 "\"" \
+             " -nf \"" COL_GRAY3 "\" -sb \"" COL_RED1 "\" -sf \"" COL_GRAY5 "\"" \
+             " -p Search: -w $1 < /dev/null)\"", \
+             "surf-search", winid, "_SURF_SEARCH", NULL \
         } \
 }
 
@@ -159,6 +173,7 @@ static Key keys[] = {
 	{ MODKEY,                GDK_KEY_f,      spawn,      SETPROP("_SURF_FIND", "_SURF_FIND", PROMPT_FIND) },
 	{ MODKEY,                GDK_KEY_slash,  spawn,      SETPROP("_SURF_FIND", "_SURF_FIND", PROMPT_FIND) },
 	{ MODKEY,                GDK_KEY_m,      spawn,      BM_ADD("_SURF_URI") },
+	{ MODKEY,                GDK_KEY_s,      spawn,      SEARCH() },
 
 	{ 0,                     GDK_KEY_Escape, stop,       { 0 } },
 	{ MODKEY,                GDK_KEY_c,      stop,       { 0 } },
