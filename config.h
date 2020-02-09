@@ -10,7 +10,7 @@ static char *searchurl      = "duckduckgo.com/?q=%s";
 
 
 #define DMENUMON   "0"
-#define DMENUFONT  "monospace:size=15"
+#define DMENUFONT  "monospace:size=10"
 #define COL_GRAY1  "#222222"
 #define COL_GRAY3  "#bbbbbb"
 #define COL_GRAY5  "#1d1d1d"
@@ -52,13 +52,13 @@ static Parameter defconfig[ParameterLast] = {
 	[ScrollBars]          =       { { .i = 1 },     },
 	[ShowIndicators]      =       { { .i = 1 },     },
 	[SiteQuirks]          =       { { .i = 1 },     },
-	[SmoothScrolling]     =       { { .i = 0 },     },
+	[SmoothScrolling]     =       { { .i = 1 },     },
 	[SpellChecking]       =       { { .i = 0 },     },
 	[SpellLanguages]      =       { { .v = ((char *[]){ "en_US", NULL }) }, },
 	[StrictTLS]           =       { { .i = 1 },     },
 	[Style]               =       { { .i = 1 },     },
-	[WebGL]               =       { { .i = 0 },     },
-	[ZoomLevel]           =       { { .f = 1.6 },   },
+	[WebGL]               =       { { .i = 1 },     },
+	[ZoomLevel]           =       { { .f = 1 },     },
 	[ClipboardNotPrimary] =       { { .i = 1 },	    },
 };
 
@@ -86,7 +86,7 @@ static WebKitFindOptions findopts = WEBKIT_FIND_OPTIONS_CASE_INSENSITIVE |
              "prop=\"$(printf '%b' \"$(xprop -id $1 $2 " \
              "| sed \"s/^$2(STRING) = //;s/^\\\"\\(.*\\)\\\"$/\\1/\" && cat ~/.surf/bookmarks)\" " \
              "| dmenu -fn \"" DMENUFONT "\" -nb \"" COL_GRAY1 "\"" \
-             " -nf \"" COL_GRAY3 "\" -sb \"" COL_RED1 "\" -sf \"" COL_GRAY5 "\"" \
+             " -nf \"" COL_RED1 "\" -sb \"" COL_RED1 "\" -sf \"" COL_GRAY5 "\"" \
              " -p \"$4\" -w $1 )\" && xprop -id $1 -f $3 8s -set $3 \"$prop\"", \
              "surf-setprop", winid, r, s, p, NULL \
         } \
